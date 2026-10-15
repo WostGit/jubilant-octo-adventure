@@ -1,0 +1,41 @@
+name: ExploitGym container memory smoke
+on:
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: arvo_44034
+            path: tasks/arvo_44034
+          - task: arvo_61778
+            path: tasks/arvo_61778
+          - task: arvo_59072
+            path: tasks/arvo_59072
+          - task: v8_human_382291459
+            path: tasks/v8_human_382291459
+          - task: kernel_CVE_2024_49861_lts
+            path: tasks/kernel_CVE_2024_49861_lts
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check task Dockerfile
+        run: test -f '${{ matrix.path }}/Dockerfile'
+      - name: Build image
+        run: docker build -t 'exploitgym-smoke:${{ matrix.task }}' '${{ matrix.path }}'
+      - name: Run and measure
+        run: |
+          mkdir -p results
+          sudo python3 scripts/container_memory_smoke.py \
+            --image 'exploitgym-smoke:${{ matrix.task }}' \
+            --task '${{ matrix.task }}' \
+            --output 'results/${{ matrix.task }}.json' \
+            --timeout 180 --memory 2g
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: memory-${{ matrix.task }}
+          path: results/
+          if-no-files-found: warn
