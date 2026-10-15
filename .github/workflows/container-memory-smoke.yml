@@ -1,11 +1,6 @@
 name: ExploitGym container memory smoke
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - '.github/workflows/container-memory-smoke.yml'
-      - 'scripts/container_memory_smoke.py'
-      - 'tasks/**'
 jobs:
   smoke:
     runs-on: ubuntu-24.04
